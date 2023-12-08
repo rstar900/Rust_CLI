@@ -15,5 +15,14 @@ fn main() {
     // we use clap's parsing functionality
     let args = Cli::parse();
 
-    println!("Pattern: {:?}\nPath: {:?}", args.pattern, args.path);
+    // Reading the file from the path supplied 
+    let contents = std::fs::read_to_string(&args.path).expect("Cannot read file from the given path"); 
+
+    // Iterate over the lines and print the line where the pattern is found
+    for line in contents.lines() {
+        if line.contains(&args.pattern) {
+            println!("{}", line);
+        }
+    }
+
 }
