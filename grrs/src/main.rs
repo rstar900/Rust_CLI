@@ -1,6 +1,11 @@
 use clap::Parser; // Required for parsing command line args
 use anyhow::{Context, Result}; // Required for error with context
 
+// For BufReader
+use std::io::prelude::*;
+use std::io::BufReader;
+use std::fs::File;
+
 #[derive(Parser)]
 struct Cli {
     // Pattern string to look for
@@ -17,13 +22,18 @@ fn main() -> Result<()> {
     let args = Cli::parse();
 
     // Reading the file from the path supplied 
-    let contents = std::fs::read_to_string(&args.path).with_context(|| format!("Error reading `{}`", args.path.display()))?; 
+    let file = File::open(&args.path).with_context(|| format!("Could not read file `{}`", args.path.display()))?;
+    let mut reader = BufReader::new(file);
+    let mut line = String::new();
+    let mut bytes_read = reader.read_line(&mut line).with_context(|| format!("Could not read line"))?;
 
     // Iterate over the lines and print the line where the pattern is found
-    for line in contents.lines() {
+    while bytes_read != 0 {
         if line.contains(&args.pattern) {
             println!("{}", line);
         }
+        line.clear(); // important to clear as read_line appends to existing buffer
+        bytes_read= reader.read_line(&mut line).with_context(|| format!("Could not read line"))?;
     }
 
     Ok(())
